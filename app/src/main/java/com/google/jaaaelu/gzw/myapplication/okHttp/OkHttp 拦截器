@@ -1,0 +1,33 @@
+官方解释：拦截器是 OkHttp 中提供一个强大机制，它可以实现网络监听、请求以及相应重写、请求失败重试等功能
+//  拦截器不区分同步/异步
+
+1.RetryAndFollowUpInterceptor，重试和失败重定向拦截器，做一些初始化工作，并创建 StreamAllocation 传递给后面
+2.BridgeInterceptor，桥接和适配拦截器，补充用户缺少的必要的请求头
+3.CacheInterceptor，缓存拦截器，处理缓存功能
+//  核心的两个
+4.ConnectInterceptor，连接拦截器，主要用于建立可用的连接，是 CallServerInterceptor 的基础
+5.CallServerInterceptor，主要负责将 Http 请求写入网络的 IO 当中，并且从网络 IO 中读取服务端返回给我们的数据
+
+//  请求时 1 -> 2 -> 3 -> 4 -> 5
+//  服务器返回时 5 -> 4 -> 3 -> 2 -> 1
+
+总结一：
+1.创建一系列拦截器，并将其放入一个拦截器 List 中
+2.创建一个拦截器链 RealInterceptorChain 对象，并执行拦截器链的 proceed 方法（是为了创建下一个拦截器链，
+这样就能一次调用一下拦截器，从而构成一个完整的拦截器链），理解成一个一个拦截器调用 intercept 就可以
+
+总结二：
+1.在发起请求前对 request 进行处理
+2.调用下一个拦截器，获取 response
+3.对 response 继续您处理，返回给上一个拦截器
+
+//  五个 OkHttp 的核心拦截器的具体作用
+1.RetryAndFollowUpInterceptor，重试和失败重定向拦截器，用于失败重连，不过并不是所有 Http 请求都可以在
+失败后进行重连，是一定的限制的，如果在限制范围内可以进行重连，StreamAllocation 是用来分配 Stream 的
+在这个拦截器并没有使用到，传递给后面使用，用于连接服务端与数据传输的输入输出流，内部是递归的，只有执
+行完所有拦截器才会返回 response，重连的最多次数也就只是 20 次
+//  RetryAndFollowUpInterceptor 流程
+(1).创建 StreamAllocation，这个对象用来建立执行 Http 所需要的所有的网络的组件，用于分配 Stream
+(2).调用 RealInterceptorChain.proceed(...) 进行网络请求
+(3).根据异常结果或者响应结果判断是否要进行重新请求
+(4).调用下一个拦截器，对 response 进行处理，返回给上一个拦截器

@@ -1,0 +1,24 @@
+//  具体步骤
+1.创建 OkHttpClient 与 Request。
+2.将 Request 封装成 Call 对象。
+//  同步和异步区分就在这里
+//  真正的网络请求发起是在这一步
+//  将请求加入到调度中，也就是 Dispatcher
+//  一个 Call 对象只能执行一次
+3.调用 Call 的 enqueue() 发送异步请求。
+
+//  enqueue 方法总结
+1.判断当前 Call 是否执行过
+2.将传递进来的 CallBack 对象封装成一个 AsyncCall，而 AsyncCall 其实就是一个 Runnable
+3.client.dispatcher().enqueue(new AsyncCall(responseCallback)); 调用 dispatcher 的 enqueue，然后进行
+数据判断，如果满足 runningAsyncCalls.size() < maxRequests && runningCallsForHost(call) < maxRequestsPerHost
+就将当前这个 AsyncCall 添加到正在执行的异步队列中并执行，如果不满足就加入等待队列等待执行，其中 maxRequests
+为 64，所以 OkHttp 的正在执行的异步请求个数不会超过 64
+4.最终执行的时候其实是走到了 AsyncCall 的 execute 方法中，这里也和同步一样，也调用了 getResponseWithInterceptorChain();
+通过该方法拿到 Response，然后 retryAndFollowUpInterceptor.isCanceled() 取消与否，来决定回调那个函数，
+如果是没有取消就走到了我们熟悉的 responseCallback.onResponse(RealCall.this, response); 反之就回调了
+失败的方法，如果中途有异常也会走失败的回调，然后在 finally 里中 finish 这个请求
+5.finish 最终走到了 dispatcher 里面，做了三件事：(1).把这个请求从正在请求的队列中移除；(2).调用 promoteCalls();
+用来调整异步请求队列的；(3).重新计算正在执行的线程数量，后面有判断作用
+
+//  注意：异步请求的队列有两个，一个是正在执行的，一个等待执行的

@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
      * @param view View 点击事件
      */
     public void request(View view) {
-        requestBySync();
+//        requestBySync();
         requestByASync();
     }
 

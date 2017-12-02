@@ -1,0 +1,11 @@
+Dispatcher 类实现
+Q1.OkHttp 如何实现同步异步请求？
+A:发出的同步/异步请求都会在 Dispatcher 中管理其状态
+Q2:到底什么是 Dispatcher？
+A:Dispatcher 的作用为维护请求的状态，并维护一个线程池，用于执行请求
+Q3:异步请求为什么需要两个队列？
+A:Dispatcher 对应着生产者，ExecutorService 对应着消费者池，看做生产者与消费者模型，所以也就需要两个
+队列，一个 Deque<AsyncCall> readyAsyncCalls 用于缓存的，一个 Deque<AsyncCall> runningAsyncCalls 用于
+正在运行的任务
+
+Call 执行完肯定需要在 runningAsyncCalls 队列中移除这个线程
