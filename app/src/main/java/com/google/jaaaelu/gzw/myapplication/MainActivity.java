@@ -8,9 +8,11 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
+import okhttp3.Cache;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -38,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
     //  无论同步还是异步，总结的前两步是一样的。
 
     //  Dispatcher 类是非常重要的，核心之一
+
 
     //  同步请求流程与源码分析
     //  1. 还是先要创建 OkHttpClient，这时候要看 Builder 的构造
@@ -82,6 +85,11 @@ public class MainActivity extends AppCompatActivity {
         mHttpClient = new OkHttpClient.Builder()
                 .readTimeout(5, TimeUnit.SECONDS)
                 .build();
+
+        //  开启缓存功能
+        OkHttpClient client = new OkHttpClient
+                .Builder()
+                .cache(new Cache(new File("cache"), 24 * 1024 * 1024)).build();
     }
 
     /**

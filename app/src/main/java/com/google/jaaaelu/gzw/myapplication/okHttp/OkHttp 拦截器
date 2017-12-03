@@ -31,3 +31,93 @@
 (2).调用 RealInterceptorChain.proceed(...) 进行网络请求
 (3).根据异常结果或者响应结果判断是否要进行重新请求
 (4).调用下一个拦截器，对 response 进行处理，返回给上一个拦截器
+
+2.BridgeInterceptor，主要负责内容为：内容长度、编码方式、压缩、连接方式（Keep-Alive）等等，主要是添加头部的作用，以及实现链接
+复用的基础，如果是支持 GZip，且返回的内容也是 GZip 格式的，OkHttp 会帮我们解压缩
+//  BridgeInterceptor 所做的三样功能
+(1).是负责将用户构建的一个 Request 请求转化为能够进行网络访问的请求
+(2).将这个符合网络请求的 Request 进行网络请求
+(3).将网络请求回来的响应 Response 转化为用户可用的 Response
+
+3.CacheInterceptor
+使用：OkHttpClient client = new OkHttpClient
+           .Builder()
+           //  最终还是通过 DiskLruCache 去做的
+           //  不缓存非 Get 方法的请求
+           //  写入时，不仅写入响应的头部信息，还包括请求的头部信息以及 body
+           .cache(new Cache(new File("cache"), 24 * 1024 * 1024)).build();
+(1).先看看是否可以通过拦截器内部的 cache 能拿得到缓存
+(2).通过 CacheStrategy 的 Factory，创建一个缓存策略
+    ①缓存中没有响应，就重新进行网路请求
+    ②如果是 Https 的且已经有过握手，就重新进行网路请求
+    ③响应该不该被存储，如果不该被存储就需要重新请求
+    ④如果指定了不适用缓存或者请求是可选择的，就重新进行网络请求
+    ⑤对缓存的响应进行判断，是否是不容易影响的，且如果是就可以直接用缓存
+    ⑥比较缓存的 Response，检查它们是否有条件的一些请求头，然后添加一些请求头
+(3).如果拦截器内部的 cache 不为 null 的话，进行统计数据更新，如缓存命中率
+(4).如果当前不能使用网络且没有相应的缓存，OkHttp 会创建一个 Response，抛出 504 的错误
+(5).如果有缓存，但是不能使用网络的时候，这时候直接返回缓存结果
+(6).没找到缓存就继续调用下一个拦截器获取 Response
+(7).等做完后续拦截器链的工作，会判断是否是值修改过，也就是 304 从缓存中获取
+(8).如果不是的话就继续判断，是否有响应体以及是否可以缓存，如果都满足就写入缓存
+(9).最后判断是否是个无效的缓存的方法，是的话就从缓存区移除
+
+4.ConnectInterceptor
+连接池概念：拦截器 ConnectInterceptor 与连接池的操作
+
+1、ConnectInterceptor 打开与服务器的之间链接，它能正式的开启 OkHttp 的网络请求，StreamAllocation 也是
+在这里开始使用的（RetryAndFollowUpInterceptor 中创建的），HttpCodec 用来编码 Request 与解码 Response，
+RealConnection 就是用来实际用来网络 IO 传输的，然后继续调用拦截器
+(1).ConnectInterceptor 获取 Interceptor 传过来的 StreamAllocation，执行 streamAllocation.newStream(...);
+初始化 HttpCodec
+(2).将刚才创建的用于网络 IO 的 RealConnection 对象，以及对于与服务器交互最为关键的 HttpCodec 等对象
+传递给后面的拦截器
+//  细化 newStream(...)
+(1).两件事，通过 findHealthyConnection(...) 与 resultConnection.newCodec(...); 创建 RealConnection 与 HttpCodec
+(2).findHealthyConnection(...) 做了什么？循环调用 findConnection()，来找到一个可用的 Connection，如果
+是一个全新的链接，就直接跳过健康检查，直接返回，循环结束，如果不是的话就继续，如果通过 findConnection()，
+拿到是一个不健康的链接，就调用 noNewStreams(); 进行一系列的销毁资源的操作，然后 continue 继续循环，继
+续调用 findConnection()，什么是不健康的 RealConnection 呢？如果 Socket 链接没有关闭或者输入输出流没有
+关闭那么就可以定义为不健康的
+(3).findConnection() 做了什么？先是一个复制操作，作用希望复用，如果可以复用就可以返回，如果不可以复用
+就去创建，不可复用就去连接池获取一个 RealConnection，如果获取成功就返回，没有返回的话通过 RealConnection
+去调用 connect(...)，去进行实际的网络连接，然后将其放在连接池中
+//  OkHttp 中的链接分为两种，一种是 Socket 链接，一种是隧道连接
+(4).RealConnection 的 connect(...) 做了哪些操作呢？先检查链接是否已经建立了，如果已经建立了就抛出一个
+异常，否则就继续执行，然后进行 Socket 链接配置，然后接下来是循环，判断是否需要建立隧道进行链接
+ConnectInterceptor 总结：
+1.弄一个 RealConnection 对象
+2.选择不同的链接方式
+3.CallServerInterceptor
+
+2.连接池的操作（共享相同的地址的时候就可以复用链接，存储有时间限制，不可能无限制存储所有链接等你用）
+(1)get()，遍历连接池中的链接，从中获取一个可用的，用 connection.isEligible(...) 去判断这个链接是否可
+以复用，然后通过 streamAllocation.acquire(connection, true); 去获取连接池中获取到的 RealConnection，
+然后将 StreamAllocation 的弱引用添加到 RealConnection 中的 allocations 这个集合当中去，可以通过 allocations
+来判断一个链接的负载量是否超过了最大值
+(2).put()，先根据标志位做一次异步清理工作，然后添加
+总结：
+1.产生一个 StreamAllocation 对象
+2.StreamAllocation 对象的弱引用添加到 RealConnection 对象的 allocations 集合
+3.从连接池中获取
+(3).连接池如何实现自动回收？利用 GC 和 StreamAllocation 数量，如果 StreamAllocation 数量变为 0，然后
+被连接池监测到进行回收，在一个单独的线程中去清理
+总结：
+1.OkHttp 使用了 GC 回收算法
+2.StreamAllocation 的数量会渐渐变成 0
+3.被线程池监测到并回收，这样就可以保证多个健康的 Keep-Alive 链接
+
+5.CallServerInterceptor，用于发起请求和接收服务器返回响应
+(1).拿到各种值，写入向 Socket 中写入请求头信息
+//  中间有一个特殊情况判断，可以继续发送请求，并跳过写入 body 请求的步骤，直接去获取响应信息
+(2).向 Socket 当中写入请求的 body 信息
+(3).httpCodec.finishRequest(); 调用后表明完成了整个网络请求的写入工作
+(4).然后进行读取工作，先读取响应头
+(5).创建一个 Response，并读取网络响应的 body 信息
+(6).关闭流
+(7).有一个响应码的判断，然后完成了整个 Response 的获取工作
+
+总结（OkHttp 中一次网络请求的大致过程）：
+1.Call 对象对请求的封装
+2.Dispatcher 对请求的分发
+3.getResponseWithInterceptorChain(); 调用拦截器链
