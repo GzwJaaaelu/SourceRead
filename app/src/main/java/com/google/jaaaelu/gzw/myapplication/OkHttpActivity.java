@@ -2,9 +2,9 @@ package com.google.jaaaelu.gzw.myapplication;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
@@ -19,7 +19,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class MainActivity extends AppCompatActivity {
+public class OkHttpActivity extends AppCompatActivity {
     //  创建 OkHttp 同步方法总结
     //  1.创建 OkHttpClient 与 Request，对应下面的 1/2
     //  2.将 Request 封装成 Call 对象，对应下面的 3
@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "HTTP";
 
     public static Intent createIntent(Context context) {
-        return new Intent(context, MainActivity.class);
+        return new Intent(context, OkHttpActivity.class);
     }
 
     @Override
