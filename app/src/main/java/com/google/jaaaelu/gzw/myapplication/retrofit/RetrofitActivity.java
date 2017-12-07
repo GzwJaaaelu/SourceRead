@@ -61,6 +61,7 @@ public class RetrofitActivity extends AppCompatActivity {
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .build();
         //  通过 Retrofit 的 create() 来创建 GitHubService
+        //  这里使用了外观模式和动态代理模式
         GitHubService service = retrofit.create(GitHubService.class);
         Call repos = service.listRepos(null);
         //  同步方法
@@ -69,7 +70,7 @@ public class RetrofitActivity extends AppCompatActivity {
         repos.enqueue(new Callback() {
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) {
-
+                response.isSuccessful();
             }
 
             @Override

@@ -1,0 +1,24 @@
+RxJava2CallAdapterFactory
+继承了 CallAdapter 中的 Factory 抽象类
+
+CallAdapter 流程
+//  作用就是用于把 Retrofit 中的 Call<T> 转换为 Java 对象，然后通过 Java 的对象进行他的操作，不过这中
+间还需要数据转换器
+//  Retrofit 中的 Call 与 OkHttp 中的 Call 对象是不一样的，Retrofit 中的 Call 是对 OkHttp 中的 Call
+进行了封装
+CallAdapter 中的 Type responseType()，这里的 Type 就是 Call<List<Repo>> listRepos(...) 中的 List 类型,
+也就是解析之后的类型，Type 是返回的类型的泛型的实参
+CallAdapter 中的 T adapt(Call<R> call)，这里的 T 表示 Call<R> 要转换为的类型，比如 RxJava 中就会对应
+RxJava 的类型
+
+然后接下来就是内部 Factory 抽象类
+Factory 的 get() 方法就是获取我们实际需要 CallAdapter
+Factory 的 getRawType() 获取原始类型
+
+在 RxJava2CallAdapter 的 adapt() 调用了 observable.subscribeOn(scheduler);这也就是去执行了网络请求
+
+RxJava2CallAdapterFactory 实现：
+1.实现 Factory
+2.注册 CallAdapter
+3.Factory.get
+4.adapter 方法

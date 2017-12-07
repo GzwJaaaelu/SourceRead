@@ -1,0 +1,34 @@
+//  网络请求八个步骤
+1.创建 Retrofit 实例
+2.定义一个网络请求接口并为接口中的方法添加注解
+3.通过动态代理生成网络请求对象（也就是解析网络请求中的接口并配置请求参数）
+4.通过网络请求适配器将网络请求对象进行平台适配（如 Android，Java8）
+5.通过网络请求执行器发送网络请求
+6.通过数据转换器解析数据
+7.通过回调执行器切换线程
+8.用户在主线程处理返回结果
+
+//  Retrofit 类中 7 个重要的变量
+1.Map<Method, ServiceMethod<?, ?>> serviceMethodCache，Key 是请求方法，ServiceMethod 代表网络接口方法
+中进行注解之后解析出来的对象，所以 serviceMethodCache 主要用于缓存
+2.okhttp3.Call.Factory callFactory，请求网络的 OkHttp 工厂，用于生产 OkHttpClient
+3.HttpUrl baseUrl，网络请求的基地址，配合网络接口中请求方法中的相对地址，拼接成完整的网络请求地址
+4.List<Converter.Factory> converterFactories，数据转换器工厂的集合，而工厂的作用就是用于生产我们所需
+要数据转换器
+5.List<CallAdapter.Factory> adapterFactories，网络请求适配器集合，将我们的 Call 对象转换为其他平台的
+Call，比如我们想要使用 RxJava，那么就可以 Call 转为 RxJava 平台的 Call
+6.Executor callbackExecutor，用于执行回调的线程池（Android 默认主线程）
+7.boolean validateEagerly，标志位，是否需要立即解析接口中的方法
+
+//  Retrofit 的 Builder 类，除了创建上面的对象还有一个 Platform 对象
+Platform 类就表示适配的平台，Android 平台的 Executor 是主线程的，配个一个主线程 Handler，这也是为什
+么 Android 中 Retrofit 的回调是在主线程中执行的原因
+
+create()
+1.对传递进来的 Class 进行验证，如有问题会抛出异常
+2.判断 validateEagerly 标志位，如果为 true 执行 eagerlyValidateMethods(service)，这个方法主要是去看
+serviceMethodCache 中是否有缓存，如果有的话可以直接用，没有的话去 new 一个 ServiceMethod，然后并保存
+到 serviceMethodCache 中
+//  ServiceMethod 对应我们定义好的网络接口中的方法，也就是那些单个方法的封装
+3.返回一个动态代理对象，通过动态代理创建网路请求接口实例，这时每当我们执行代理类方法的时候，就会执行
+到 InvocationHandler 的 invoke 方法

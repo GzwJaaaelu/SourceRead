@@ -8,6 +8,7 @@ import retrofit2.http.Path;
 
 /**
  * Created by Administrator on 2017/12/6.
+ * 网络请求接口
  */
 
 public interface GitHubService {
@@ -18,6 +19,7 @@ public interface GitHubService {
     //  Path 的作用是如果传递进来的 user 为空的话，就用 "user" 这个作为默认值传递进去
     Call<List<Repo>> listRepos(@Path("user") String user);
 
+    //  括号里面的是相对 URL 地址
     @GET(".../...")
-    Call<MyResponse> getCall();
+    Call<List<MyResponse>> getCall();
 }
