@@ -1,0 +1,2 @@
+同步请求，调用 OkHttpCall 的 execute() 
+异步请求，调用 OkHttpCall 的 execute() 
