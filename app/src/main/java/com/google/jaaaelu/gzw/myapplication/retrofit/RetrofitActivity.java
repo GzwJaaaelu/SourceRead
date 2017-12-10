@@ -103,7 +103,8 @@ public class RetrofitActivity extends AppCompatActivity {
                 p);
         //  通过代理对象调动真实对象相关接口中的实现方法，这个时候就会跳转到这个代理对象所关联的
         //  InvocationHandler 的 invoke(...) 方法
-        subject.shopping();
+        subject.shopping("Gzw");
+        subject.shopping("Jaaaelu");
         //  获得真实对象的代理对象所对应的 Class 对象的名称，用字符串表示
         System.out.println(subject.getClass().getName());
     }

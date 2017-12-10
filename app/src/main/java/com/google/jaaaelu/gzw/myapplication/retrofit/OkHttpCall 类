@@ -1,0 +1,10 @@
+OkHttpCall 是 Retrofit 的 Call 的实现类，而这个 Call 是 OkHttp Call 的封装)，OkHttpCall 中持有一个
+OkHttp 的 Call 对象
+
+//  成员变量
+1.ServiceMethod，存放了网络请求参数信息的
+2.Object[] args，存放了网络请求接口方法中传递进来的参数
+3.canceled，是否取消了请求
+4.rawCall，OkHttp 中的 Call 对象
+5.Throwable，异常信息
+6.executed，请求是否执行过

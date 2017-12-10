@@ -1,0 +1,22 @@
+ServiceMethod 对应我们定义好的网络请求接口中的一个方法
+这个类包含我们访问网络的基本信息，也是通过 Builder 来创建的
+
+其中 Builder 会传入一个 Method 参数，然后通过以下三个方法来获取方法上面的注解和值，方法的参数类型以及
+方法中的注解和值，这个比较重要：
+      this.methodAnnotations = method.getAnnotations();
+      this.parameterTypes = method.getGenericParameterTypes();
+      this.parameterAnnotationsArray = method.getParameterAnnotations();
+最终调用 build() 完成 ServiceMethod 创建
+
+build() 中的操作
+1.调用 createCallAdapter() 创建 callAdapter，createCallAdapter() 根据方法中返回的类型和注解类型，从
+Retrofit 中获取对应的网络请求接口适配器，然后 Retrofit 遍历适配器工厂集合，调用适配器工厂的 get(...)，
+去获取对应的 CallAdapter
+2.调用 callAdapter.responseType() 获取这个网络适配器返回的数据类型
+3.调用 createResponseConverter() 创建数据转换器，然后这里也又走到了 Retrofit 中，和 createCallAdapter()
+类似，在 Retrofit 中遍历数据转换器工厂集合，从中找到合适的数据转换器工厂（默认是 Gson 的转换器）
+4.在循环中解析方法上的注解，然后进行一系列判断，有问题就是抛出异常，没问题继续
+5.然后获取方法中参数的个数，并在循环中解析是否方法中也存在注解
+//  build() 总结，整个 build() 就是根据返回值类型和方法中的注解来获取网络请求适配器、数据转换适配器，
+//  并解析需要的参数
+

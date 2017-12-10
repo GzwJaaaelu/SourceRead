@@ -2,6 +2,7 @@ package com.google.jaaaelu.gzw.myapplication.retrofit.proxy.dynamicProxy;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 
 /**
  * Created by Administrator on 2017/12/6.
@@ -25,6 +26,18 @@ public class Proxy implements InvocationHandler {
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         System.out.println("proxy: " + proxy.getClass().getName());
         System.out.println("before...");
+        System.out.println("method.getAnnotations()..." + Arrays.toString(method.getAnnotations()));
+        System.out.println("method.getGenericParameterTypes()..." + Arrays.toString(method.getGenericParameterTypes()));
+        System.out.println("method.getParameterAnnotations()..." + Arrays.toString(method.getParameterAnnotations()));
+
+        for (int i = 0; i < method.getParameterAnnotations().length; i++) {
+            for (int j = 0; j < method.getParameterAnnotations()[i].length; j++) {
+                System.out.println("ParameterAnnotations..." + method.getParameterAnnotations()[i][j].toString());
+                System.out.println("ParameterAnnotations..." + method.getParameterAnnotations()[i][j].annotationType());
+            }
+        }
+
+        System.out.println("method - args..." + Arrays.toString(args));
         method.invoke(target, args);
         System.out.println("after...");
         return null;

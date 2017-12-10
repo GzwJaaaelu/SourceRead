@@ -1,6 +1,6 @@
 //  网络请求八个步骤
 1.创建 Retrofit 实例
-2.定义一个网络请求接口并为接口中的方法添加注解
+2.定义一个网络请求接口并为接口中的方法添加注解（通过接口和注解对网络请求进行了封装）
 3.通过动态代理生成网络请求对象（也就是解析网络请求中的接口并配置请求参数）
 4.通过网络请求适配器将网络请求对象进行平台适配（如 Android，Java8）
 5.通过网络请求执行器发送网络请求
@@ -29,6 +29,14 @@ create()
 2.判断 validateEagerly 标志位，如果为 true 执行 eagerlyValidateMethods(service)，这个方法主要是去看
 serviceMethodCache 中是否有缓存，如果有的话可以直接用，没有的话去 new 一个 ServiceMethod，然后并保存
 到 serviceMethodCache 中
-//  ServiceMethod 对应我们定义好的网络接口中的方法，也就是那些单个方法的封装
+//  ServiceMethod 对应我们定义好的网络接口中的一个方法
 3.返回一个动态代理对象，通过动态代理创建网路请求接口实例，这时每当我们执行代理类方法的时候，就会执行
 到 InvocationHandler 的 invoke 方法
+4.invoke() 内部
+(1).先判断方法是否为 Object 类当中的方法，如果是的话就直接返回该方法调用
+(2).如果是 platform.isDefaultMethod(method)，就 return platform.invokeDefaultMethod(method, service, proxy, args);
+(3).主要是第三个判断，通过 loadServiceMethod(...) 去获取 ServiceMethod（存在缓存就用缓存，没有就创建，
+然后存入缓存）
+(4).获取一个 OkHttpCall(是 Retrofit 的 Call 的实现类，而这个 Call 是 OkHttp Call 的封装)，OkHttpCall
+中持有一个 OkHttp 的 Call 对象
+(5).返回适配后的对象，将 OkHttpCall 转为其他平台的对应的 Call 类型并返回(如 RxJava 的 Observable)

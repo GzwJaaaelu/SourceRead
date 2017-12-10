@@ -1,2 +1,15 @@
-同步请求，调用 OkHttpCall 的 execute() 
-异步请求，调用 OkHttpCall 的 execute() 
+同步请求，调用 OkHttpCall 的 execute()
+异步请求，调用 OkHttpCall 的 enqueue(CallBack)
+
+同步与异步的区别：回调执行器（异步）
+
+同步请求的流程：
+1.利用 ParameterHandler 解析请求方法中的注解并创建 ServiceMethod
+2.根据对象 ServiceMethod，创建一个 OkHttp 的 Request 对象，在 createRawCall() 时进行，最终调用到 ServiceMethod
+的 toRequest(...)
+3.通过 OkHttpCall 中创建的实际的 OkHttp 的 Call 对象去发起请求
+4.通过数据转换器解析服务端返回给我们的数据，拿到 OkHttp 返回的 Response 要进行解析，调用 parseResponse(...)，
+然后走到 ServiceMethod 的 toResponse(...)，最终调用数据转换器的转换方法
+
+异步请求的流程
+其实也可以上面流程一样，只是走了异步方法，会走到自己的回调中

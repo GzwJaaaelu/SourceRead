@@ -7,7 +7,7 @@ package com.google.jaaaelu.gzw.myapplication.retrofit.proxy.dynamicProxy;
 public class Man implements Subject {
 
     @Override
-    public void shopping() {
-        System.out.println("Gzw 要去买东西...");
+    public void shopping(String user) {
+        System.out.println(user + " 要去买东西...");
     }
 }
