@@ -59,6 +59,7 @@ public class RetrofitActivity extends AppCompatActivity {
                 .addConverterFactory(GsonConverterFactory.create())
                 //  网络请求适配器（可以使用 Android 默认的）
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+
                 .build();
         //  通过 Retrofit 的 create() 来创建 GitHubService
         //  这里使用了外观模式和动态代理模式

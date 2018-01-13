@@ -1,8 +1,20 @@
-1.Socket、HttpClient 和 HttpURLConnection
-2.WebSocket
-3.OkHttp 如何处理缓存
-4.断点续传
-5.多线程下载
-6.文件上传
-7.Json 如何解析
-8.OkHttp 如何处理 Https
+一.Socket、HttpClient 和 HttpURLConnection
+1.Socket
+(1).Socket 是什么？
+- 是一个对 TCP / IP 协议进行封装的编程调用接口（不是协议，而是 API）
+- 成对出现，一对套接字：包括 ip 地址和端口号
+(2).TCP 是字节流的传输方式，UDP 是数据报文的传输方式
+(3).Android 与服务器通信方式
+- Http 通信（基于请求响应方式的）
+- Socket 通信（基于 TCP / IP 协议，双方建立连接后就可以直接进行数据传输了）
+- 区别：Http 协议属于应用层，采取请求响应方式；Socket 属于传输层，采用服务器主动发送数据的方式
+(4).如何实现？
+- 请看 Demo
+(5).HttpClient 和 HttpURLConnection
+二.WebSocket
+三.OkHttp 如何处理缓存
+四.断点续传
+五.多线程下载
+六.文件上传
+七.Json 如何解析
+八.OkHttp 如何处理 Https
